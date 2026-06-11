@@ -1,12 +1,14 @@
 import React ,{useState}from 'react'
 import { useNavigate } from 'react-router-dom'
+import {useSelector} from 'react-redux'
 import {motion} from 'motion/react'
 import {HandCoins} from 'lucide-react'
 import Login from './Login'
 const Navbar = () => {
   const navigate=useNavigate();
+  const {userData}=useSelector((state)=>state.user);
   const [openLog,setOpenLog]=useState(false);
-  let userData=false;
+  
   return (
     <>
    <motion.div 
@@ -27,7 +29,7 @@ const Navbar = () => {
          {userData && (
           <div className='hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border-white/10 text-sm cursor-pointer hover:bg-white/10 transition-colors'>
               <HandCoins size={20} className='text-yellow-400' />
-              <span className='text-white font-semibold ml-2'>100</span>
+              <span className='text-white font-semibold ml-2'>userData.credits</span>
              <span className='text-zinc-200'>Credits</span>
              <span className='text-green-400'>+</span>
             </div>
@@ -37,7 +39,8 @@ const Navbar = () => {
          {userData ?(
          <div className='relative'>
           <button className='flex items-center'>
-             <img src="https://ui-avatars.com/api/?name=palak+verma" alt="Profile" className='h-8 w-8 rounded-full cursor-pointer border-white/10 object-cover hover:scale-105 transition-transform' />
+             <img referrerPolicy='no-referrer'
+             src={userData?.avatar || "https://ui-avatars.com/api/?name=palak+verma"} alt="Profile" className='h-8 w-8 rounded-full cursor-pointer border-white/10 object-cover hover:scale-105 transition-transform' />
           </button>
            
          </div>

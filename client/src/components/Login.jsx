@@ -1,10 +1,12 @@
 import React from 'react'
 import axios from 'axios'
 import {motion} from 'motion/react'
+import {useDispatch} from 'react-redux'
 import {X,WandSparkles} from 'lucide-react'
 import {signInWithPopup} from 'firebase/auth'
 import {auth,provider} from '/firebase.js'
 const Login = ({open,onClose}) => {
+    const dispatch=useDispatch();
     const handleGoodleAuth=async()=>{
        try{
         {/* Sign in with Google using a popup */}
@@ -16,7 +18,7 @@ const Login = ({open,onClose}) => {
          },{withCredentials:true
         });
 
-        
+        dispatch(setUserData(data));
        }catch(error){
         console.error("Google Sign-In Error:",error);
     }

@@ -27,7 +27,7 @@ export const googleAuth=async(req,res)=>{
             sameSite:"strict",
             maxAge:7*24*60*60*1000//7 days
         });
-        return res.status(200).json({ success:true, message:"User logged in successfully", token });
+        return res.status(200).json(user);
     }
     catch(err){
         return res.status(500).json({ success:false, message:"Internal Server Error"});
