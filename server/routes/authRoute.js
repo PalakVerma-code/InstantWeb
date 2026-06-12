@@ -3,6 +3,6 @@ import {googleAuth, logoutUser} from "../controllers/authController.js";
 const router=express.Router();
 
 router.post("/google", googleAuth);
-router.post("/logout", logoutUser);
+router.get("/logout", logoutUser);
 
 export default router;

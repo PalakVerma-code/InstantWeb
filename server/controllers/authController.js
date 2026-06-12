@@ -34,6 +34,7 @@ export const googleAuth=async(req,res)=>{
     }
 
 }
+//route:GET /api/auth/logout
 export const logoutUser=async(req,res)=>{
     try{
         res.clearCookie("token");

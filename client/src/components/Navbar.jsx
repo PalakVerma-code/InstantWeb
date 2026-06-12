@@ -1,14 +1,34 @@
 import React ,{useState}from 'react'
 import { useNavigate } from 'react-router-dom'
-import {useSelector} from 'react-redux'
-import {motion} from 'motion/react'
+import {useSelector,useDispatch} from 'react-redux'
+import {AnimatePresence, motion} from 'motion/react'
 import {HandCoins} from 'lucide-react'
 import Login from './Login'
+import axios from 'axios'
+import {setUserData} from '../redux/userSlice'
 const Navbar = () => {
   const navigate=useNavigate();
+  const dispatch=useDispatch();
   const {userData}=useSelector((state)=>state.user);
+ 
   const [openLog,setOpenLog]=useState(false);
+  const [openProfile,setOpenProfile]=useState(false);
   
+  const logoutHandler=async()=>{
+    try{
+      const res=await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`,{withCredentials:true});
+      if(res.data.success){
+        //clear user data from redux store
+        //dispatch(clearUserData())
+        //redirect to home page
+        dispatch(setUserData(null));
+        setOpenProfile(false);
+        navigate('/');
+      }
+    }catch(err){
+      console.error("Logout Error:",err);
+    }
+  }
   return (
     <>
    <motion.div 
@@ -38,10 +58,36 @@ const Navbar = () => {
          {/* profile  or login button */}
          {userData ?(
          <div className='relative'>
-          <button className='flex items-center'>
+          <button onClick={() => setOpenProfile(true)} className='flex items-center'>
              <img referrerPolicy='no-referrer'
              src={userData?.avatar || "https://ui-avatars.com/api/?name=palak+verma"} alt="Profile" className='h-8 w-8 rounded-full cursor-pointer border-white/10 object-cover hover:scale-105 transition-transform' />
           </button>
+          <AnimatePresence>
+             {openProfile && (
+              <motion.div
+              initial={{opacity:0,scale:0.8,y:-20}}
+              animate={{opacity:1,scale:1,y:0}}
+              exit={{opacity:0,scale:0.8,y:-20}}
+              transition={{duration:0.2}}
+               onClick={() => setOpenProfile(false)}
+              className='absolute right-0 mt-3 w-60 bg-white/10 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 '
+              >
+               <div className='px-4 py-3flex f border-b border-white/20'>
+               <p className='text-sm truncate  font-medium text-white'>{userData.name}</p>
+               <p className='text-xs text-zinc-400 truncate'>{userData.email}</p>
+
+               </div>
+               <button onClick={() => navigate('/dashboard')} className='w-full text-left px-4 py-3 text-sm text-white hover:bg-white/20 transition-colors'>
+                Dashboard
+               </button>
+               <button 
+                 onClick={logoutHandler}
+                 className='w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/20 transition-colors'>
+                Logout
+               </button>
+              </motion.div>
+             )}
+          </AnimatePresence>
            
          </div>
          ):(
