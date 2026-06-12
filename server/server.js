@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors"; 
 import connectDB from "./config/db.js";
 import authRoute from "./routes/authRoute.js";
+import websiteRoute from "./routes/websiteRoute.js";
 dotenv.config();
 connectDB();
  //job to parse cookies in incoming requests and make them available in req.cookies ,mainly used for authentication and session management where we need to read and set cookies for user sessions.
@@ -21,6 +22,7 @@ app.get("/",(req,res)=>{
     res.send("hello world");
 })
 app.use("/api/auth",authRoute);
+app.use("/api/website",websiteRoute);
 app.listen(PORT,()=>{
     console.log(`server is running on port ${PORT}`);
 })
