@@ -1,6 +1,8 @@
-import Website from '../models/Website.js';
+import Website from '../models/websiteModel.js';
 import User from '../models/userModel.js';
 import { generateResponse } from '../config/openRouter.js';
+import extractJson from '../utils/extractjson.js';
+
 const masterPrompt = `
 YOU ARE A PRINCIPAL FRONTEND ARCHITECT
 AND A SENIOR UI/UX ENGINEER
@@ -151,33 +153,198 @@ ABSOLUTE RULES
 
 
 //route:POST /api/website/generate
-export const generateWebsite=async(req,res)=>{
-   try{
-    const {prompt}=req.body;
-    if(!prompt){
-        return res.status(400).json({ success:false, message:"Please Provide all the required fields"});
+export const generateWebsite = async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ success: false, message: "Please Provide all the required fields" });
     }
-    const user=await User.findById(req.user.id);
-    if(!user){
-        return res.status(404).json({ success:false, message:"User not found"});
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    if(user.credits<10){
-        return res.status(400).json({ success:false, message:"Not enough credits"});
+    if (user.credits < 10) {
+      return res.status(400).json({ success: false, message: "Not enough credits" });
     }
     //generate code using openai
-    const finalPrompt=masterPrompt.replace("USER_PROMPT",prompt);
-    let raw="";
-     let parsed=null;
-     for(let i=0;i<2&& !parsed;i++){
-        raw = await generateResponse(finalPrompt);
-        parsed=await JSON.parse(raw);
-     }
-        if(!parsed){
-            return res.status(500).json({ success:false, message:"Failed to generate code"});
-        }
-        return res.status(200).json({ success:true, data:parsed });
+    const finalPrompt = masterPrompt.replace("USER_PROMPT", prompt);
+    let raw = "";
+    let parsed = null;
+    for (let i = 0; i < 2 && !parsed; i++) {
+      raw = await generateResponse(finalPrompt);
 
-   }catch(err){
-        return res.status(500).json({ success:false, message:"Internal Server Error"});
-   }
+      parsed = await extractJson(raw);
+      if (!parsed) {
+        raw = await generateResponce(finalPrompt + "\n\nRETURN ONLY RAW JSON")
+        parsed = await extractJson(raw);
+      }
+    }
+    if (!parsed) {
+      return res.status(500).json({ success: false, message: "Failed to generate code" });
+    }
+    const website = await WebSite.create({
+      user: user._id,
+      title: prompt.slice(0, 50),
+      latestCode: parsed.code,
+      conversation: [
+        {
+          role: "user", content: prompt
+        },
+        {
+          role: "assistant", content: parsed.message
+        }
+      ]
+
+    })
+    user.credits = user.credits - 10;
+    await user.save();
+    return res.status(200).json({ success: true, data: parsed });
+
+    return res.status(200).json({
+      websiteId: website._id,
+      remainingCredits: user.credits,
+    });
+
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 }
+//route:GET /api/website
+export const getAllWebsites = async (req, res) => {
+  try {
+    const websites = await Website.find({
+      user: req.user._id,
+    })
+    return res.status(200).json({ success: true, data: websites });
+
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+//route:GET /api/website/:id
+export const getWebsiteById = async (req, res) => {
+  try {
+
+    const website = await Website.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+    if (!website) {
+      return res.status(404).json({ success: false, message: "Website not found" });
+    }
+    return res.status(200).json({ success: true, data: website });
+
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+//route:PUT /api/website/:id
+export const changeWebsite = async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ success: false, message: "Please Provide all the required fields" });
+    }
+    const website = await Website.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+    if (!website) {
+      return res.status(404).json({ success: false, message: "Website not found" });
+    }
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.credits < 5) {
+      return res.status(400).json({ success: false, message: "Not enough credits" });
+    }
+    const updatePrompt = `Update this HTML website.
+    
+    CURRENT CODE:
+    ${website.latestCode}
+
+    USER REQUEST:
+    ${prompt}
+
+    RETURN RAW JSON ONLY:
+    {
+    "message":"Short professional confirmation sentence",
+    "code":"<UPDATED FULL HTML CODE>"}
+    `
+    let raw = "";
+    let parsed = null;
+    for (let i = 0; i < 2 && !parsed; i++) {
+      raw = await generateResponse(updatePrompt);
+
+      parsed = await extractJson(raw);
+      if (!parsed) {
+        raw = await generateResponce(updatePrompt + "\n\nRETURN ONLY RAW JSON")
+        parsed = await extractJson(raw);
+      }
+    }
+    if (!parsed) {
+      return res.status(500).json({ success: false, message: "Failed to generate code" });
+    }
+    website.conversation.push({ role: "user", content: prompt });
+    website.conversation.push({ role: "assistant", content: parsed.message });
+    website.latestCode = parsed.code;
+   await website.save();
+    user.credits = user.credits - 5;
+    await user.save();
+    return res.status(200).json({ success: true, message: parsed.message, data: parsed.code, remainingCredits: user.credits });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+//route:deploy website
+export const deployWebsite=async(req,res)=>{
+  try{
+    const website=await Website.findOne({
+      _id:req.params.id,
+      user:req.user._id
+    });
+    if (!website) {
+      return res.status(404).json({ success: false, message: "Website not found" });
+    }
+    if(!website.slug){
+      website.slug=website.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+"-"+website._id.toString().slice(-5);
+    }
+    website.deployed=true;
+    website.deploymentUrl=`${process.env.CLIENT_URL}/preview/${website.slug}`;
+    await website.save();
+    return res.status(200).json({ success: true, data: website.deploymentUrl });
+
+  }catch(err){
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+//route:GET /api/website/preview/:slug
+export const previewWebsite=async(req,res)=>{
+  try{
+     const website=await Website.findOne({
+      slug:req.params.slug,
+      
+     })
+      if(!website){
+        return res.status(404).json({success:false,message:"Website not found"});
+      }
+      return res.status(200).json(website);
+
+  }catch(err){
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+// export const generateDemo=async(_,res)=>{
+//     try{
+//         const raw=await generateResponse("hello");
+//         const parsed=await extractJson(raw);
+//         return res.status(200).json(parsed);
+//     }catch(err){
+//       return res.status(500).json({ success:false, message:"Internal Server Error"});
+//     }
+// }

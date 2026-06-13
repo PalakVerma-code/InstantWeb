@@ -1,14 +1,12 @@
 
 
-export const generateResponse=async(req,res)=>{
+export const generateResponse=async(prompt)=>{
     
 
      const response= await fetch('https://openrouter.ai/api/v1/chat/completions', {
        method: 'POST',
        headers: {
-            Authorization: 'Bearer ' + process.env.OPENROUTE_API_KEY,
-            'HTTP-Referer': '<YOUR_SITE_URL>',
-            'X-Title': '<YOUR_SITE_NAME>',
+            Authorization: `Bearer ${process.env.OPENROUTE_API_KEY}`,
             'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -16,7 +14,7 @@ export const generateResponse=async(req,res)=>{
     messages: [
         {
             role: 'system',
-            content: `You are a helpful assistant that generates code for websites based on user prompts.`
+            content: `you must return only vaild raw json `
          
         },
       {
@@ -24,11 +22,13 @@ export const generateResponse=async(req,res)=>{
         content: prompt,
       },
     ],
+    temperature: 0.2,
   }),
 });
 if(!response.ok){
-    return res.status(500).json({ success:false, message:"Failed to generate code"});
+    const errorText=await response.text();
+    throw new Error(`OpenRouter API request failed with status ${response.status}: ${errorText}`);
 }
-const data=await responce.json();
-   return data; 
+const data=await response.json();
+   return data.choices[0].message.content; 
 }

@@ -5,12 +5,14 @@ import {useDispatch} from 'react-redux'
 import {X,WandSparkles} from 'lucide-react'
 import {signInWithPopup} from 'firebase/auth'
 import {auth,provider} from '/firebase.js'
+import {setUserData} from '../redux/userSlice.js'
 const Login = ({open,onClose}) => {
     const dispatch=useDispatch();
     const handleGoodleAuth=async()=>{
        try{
         {/* Sign in with Google using a popup */}
         const result=await signInWithPopup(auth,provider);
+        
         const {data}=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/google`,{
             name:result.user.displayName,
             email:result.user.email,

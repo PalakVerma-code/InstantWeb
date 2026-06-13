@@ -14,15 +14,16 @@ const app=express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin:process.env.CLIENT_URL,
+    origin:process.env.CLIENT_URL||"http://localhost:5173",
     credentials:true
 }));
 
-app.get("/",(req,res)=>{
-    res.send("hello world");
-})
 app.use("/api/auth",authRoute);
 app.use("/api/website",websiteRoute);
+
+//http://localhost:5000/api/auth/google
+//http://localhost:5000/api/website/generate
+
 app.listen(PORT,()=>{
     console.log(`server is running on port ${PORT}`);
 })
