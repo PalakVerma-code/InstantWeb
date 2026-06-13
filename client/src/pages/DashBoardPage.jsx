@@ -16,7 +16,7 @@ const DashBoardPage = () => {
           </button>
           <h1 className='text-2xl font-bold ml-4'>Dashboard</h1>
         </div>
-           <button onClick={()=>navigate('/generate')} className='bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg transition'>
+           <button onClick={()=>navigate('/generate')} className='bg-indigo-400 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg transition text-sm'>
             + New Item
           </button>
 
