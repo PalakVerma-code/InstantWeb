@@ -1,9 +1,18 @@
 import { ArrowLeft } from 'lucide-react';
 import React from 'react'
+import axios from 'axios';
 import {useNavigate} from 'react-router-dom'
 const DashBoardPage = () => {
   const navigate=useNavigate();
-  
+  const handleGetAllWebsite=async(id)=>{
+    try{
+      const res=await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/website/getAll`,{withCredentials:true});
+
+
+    }catch(err){
+      console.error("Get All Website Error:",err);
+    }
+  }
   return (
     <div className='min-h-screen  bg-[#050505] text-white'>
      <div className=' sticky top-0 z-40 backdrop-blur-xl bg-white/5 border-b border-white/10 '>
