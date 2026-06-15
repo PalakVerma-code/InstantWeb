@@ -182,7 +182,7 @@ export const generateWebsite = async (req, res) => {
     if (!parsed) {
       return res.status(500).json({ success: false, message: "Failed to generate code" });
     }
-    const website = await WebSite.create({
+    const website = await Website.create({
       user: user._id,
       title: prompt.slice(0, 50),
       latestCode: parsed.code,
@@ -198,7 +198,7 @@ export const generateWebsite = async (req, res) => {
     })
     user.credits = user.credits - 10;
     await user.save();
-    return res.status(200).json({ success: true, data: parsed });
+    
 
     return res.status(200).json({
       websiteId: website._id,
@@ -206,6 +206,7 @@ export const generateWebsite = async (req, res) => {
     });
 
   } catch (err) {
+   
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -215,9 +216,10 @@ export const getAllWebsites = async (req, res) => {
     const websites = await Website.find({
       user: req.user._id,
     })
-    return res.status(200).json({ success: true, data: websites });
+    return res.status(200).json(websites);
 
   } catch (err) {
+   
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -232,9 +234,10 @@ export const getWebsiteById = async (req, res) => {
     if (!website) {
       return res.status(404).json({ success: false, message: "Website not found" });
     }
-    return res.status(200).json({ success: true, data: website });
+    return res.status(200).json(website);
 
   } catch (err) {
+    
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -252,9 +255,7 @@ export const changeWebsite = async (req, res) => {
     if (!website) {
       return res.status(404).json({ success: false, message: "Website not found" });
     }
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -297,6 +298,7 @@ export const changeWebsite = async (req, res) => {
     await user.save();
     return res.status(200).json({ success: true, message: parsed.message, data: parsed.code, remainingCredits: user.credits });
   } catch (err) {
+    console.error(err);
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
