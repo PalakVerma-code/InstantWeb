@@ -5,7 +5,7 @@ import { motion } from 'motion/react'
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { setUserData } from '../redux/userSlice'
-
+import toast from 'react-hot-toast'
 
 const plans = [
     {
@@ -13,7 +13,7 @@ const plans = [
         name: "Free",
         price: '₹0',
         credits: 100,
-        description: "Perfect to explore Dora ai",
+        description: "Perfect to explore InstantWeb ",
         features: [
             "AI website generation",
             "Responsive html outputs",
@@ -57,7 +57,49 @@ const plans = [
 const Pricing = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-
+     
+    const handlepayment=async(plan)=>{
+        if(plan.id==="free"){
+            navigate("/dashboard");
+            return;
+        }
+        try{
+           const amount=plan.id==="pro"?499:1499;
+           const res=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/payments/order`,{
+            amount:amount
+            ,planId:plan.id,
+            credits:plan.credits}
+            ,{
+            withCredentials:true
+           })
+           const options={
+            key:import.meta.env.VITE_RAZORPAY_KEY_ID,
+            amount:res.data.amount,
+            currency:"INR",
+            name:"InstantWeb",
+            description:`Purchase ${plan.credits} credits for InstantWeb`,
+             order_id:res.data.id,
+             handler:async(response)=>{
+                const verify=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/payments/verify`,{
+                    razorpayOrderId:res.data.id,
+                    razorpayPaymentId:response.razorpay_payment_id,
+                    razorpaySignature:response.razorpay_signature
+                },{
+                    withCredentials:true
+                })
+             
+                dispatch(setUserData(verify.data.user));
+                toast.success("Payment successful!");
+             },theme:{
+                color:"#6366f1"
+             }
+           }
+            const rzp=new window.Razorpay(options);
+            rzp.open();
+        }catch(err){
+           toast.error( "Payment failed. Please try again.");
+        }
+    }
     
     return (
         <div className='relative min-h-screen overflow-hidden bg-[#050505] text-white px-6 pt-16 pb-24'>
@@ -110,7 +152,7 @@ const Pricing = () => {
                             ))}
                         </ul>
                         <motion.button
-                            
+                            onClick={() => handlepayment(p)}
                             whileTap={{ scale: 0.96 }}
                             className={`w-full py-3 rounded-xl font-semibold transition ${p.popular ? "bg-indigo-500 hover:bg-indigo-600" :
                                 "bg-white/10 hover:bg-white/20"} disabled:opacity-60`}
