@@ -318,7 +318,7 @@ export const deployWebsite=async(req,res)=>{
     website.deployed=true;
     website.deploymentUrl=`${process.env.CLIENT_URL}/preview/${website.slug}`;
     await website.save();
-    return res.status(200).json({ success: true, data: website.deploymentUrl });
+    return res.status(200).json({ url: website.deploymentUrl });
 
   }catch(err){
     return res.status(500).json({ success: false, message: "Internal Server Error" });

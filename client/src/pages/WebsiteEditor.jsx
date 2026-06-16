@@ -7,6 +7,7 @@ import {useDispatch,useSelector} from 'react-redux'
 import { setUserData } from '../redux/userSlice'
 import { AnimatePresence,motion } from 'motion/react'
 import Editor from '@monaco-editor/react'
+import toast from 'react-hot-toast';
 
 const Header = ({ title, showChat, setShowChat }) => {
   return (
@@ -29,6 +30,7 @@ const WebsiteEditor = () => {
   const [prompt,setPrompt]=useState(''); {/*store the user input for chatbot */}
   const [updateLoading,setupdateLoading]=useState(false); {/*show loading state when generating code */}
   const [thinkIdx,setThinkIdx]=useState(0); {/*show the thinking animation when generating code */}
+  
   const {id}=useParams(); {/*get the website id from the url */}
   const {userData}=useSelector((state)=>state.user); {/*get the user data from redux store */}
 
@@ -40,7 +42,20 @@ const WebsiteEditor = () => {
     "Adding content and images",
     "Finalizing your website"
    ]
+  const handleDeploy=async(id)=>{
+         try{
+        
+          const response=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/website/deploy/${id}`,{},{withCredentials:true});
+          console.log(response);
+          window.open(`${response.data.url}`,'_blank'); {/*open the deployed website in a new tab */}
+          toast.success('Website deployed successfully!');
+         }catch(err){
+       
+          console.error(err.response?.data?.message || err.message);
+          toast.error('Failed to deploy website.');
 
+         }
+  }
    useEffect(()=>{
     if(!updateLoading){
       setThinkIdx(0);
@@ -100,13 +115,21 @@ const WebsiteEditor = () => {
       console.log(response.data);
       setMessage((msg)=>[...msg,{role:'assistant',content:response.data.message}]);{/*add the generated code to the message array */}
       setCode(response.data.latestCode);{/*update the code state with the latest code */}
+      toast.success('Website updated successfully!');
     }catch(err){
-      console.error(err.response?.data?.message || err.message);
+     
+      toast.error('Failed to update website.');
     }finally{
       
       setupdateLoading(false);
    }
 
+  }
+  if(error){
+    return <div className='h-screen flex items-center justify-center text-red-400 bg-red-100'>{error}</div>
+  }
+  if(!websites){
+    return <div className='h-screen flex items-center justify-center text-zinc-700 animate-pulse'>Loading...</div>
   }
   
   return (
@@ -155,7 +178,9 @@ const WebsiteEditor = () => {
            {/* Preview content will be displayed here */}
            <span className='text-xs text-zinc-400'>Preview</span>
            <div className='flex  gap-4'>
-              {websites?.deployed ?"":<button className='flex items-center gap-2 px-4 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-gray-700 '><Globe size={18} />Publish</button>}
+              {websites?.deployed ?"":<button
+              onClick={()=>handleDeploy(id)}
+              className='flex items-center gap-2 px-4 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-gray-700 '><Globe size={18} />Publish</button>}
 
               <button onClick={() => setShowChat(!showChat)} className='p-2 lg:hidden '><MessageCircleMore size={18} /></button>
               <button onClick={() => setShowCode(!showCode)}><Code2 size={18}/>
@@ -166,6 +191,52 @@ const WebsiteEditor = () => {
          <iframe ref={iframeRef} sandbox='allow-scripts allow-forms' className='flex-1 w-full bg-white' />
     </div>
        {/*mobile chatbot and code editor*/}
+       <AnimatePresence>
+        {showChat &&(
+          <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -100 }}
+          className='fixed inset-y-0 left-0 w-full lg:w-[45%] bg-black z-9990 flex flex-col'
+          >
+           <Header title={websites?.title} showChat={showChat} setShowChat={setShowChat} />
+           <> 
+           <div className='flex-1 overflow-y-auto px-4 py-4 space-y-4'>
+               {message?.map((msg,i)=>{
+                  return <div key={i} className={`max-w-[85%]  ${msg.role==='user'?' ml-auto':'  mr-auto'}`}>
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role==='user'?'bg-indigo-400 text-white':'bg-white/10 text-white'}`}>
+                      {msg.content}
+                    </div>
+
+                  </div>
+               })}
+                {updateLoading && <div className='max-w-[85%] mr-auto '>
+          <div className='px-4 py-2.5 rounded-2xl text-sm leading-relaxed bg-white/10 text-white italic'>
+            {thinkingPhases[thinkIdx]}...
+          </div>
+          </div>}
+
+           </div>
+            <div className='p-3 border-t border-white/10'>
+       <div className='flex gap-2 '>
+           <textarea 
+           value={prompt}
+           onChange={(e)=>setPrompt(e.target.value)}
+           rows={1}
+           placeholder='Ask InstantWeb .....'
+           className=' flex-1 resize-none rounded-2xl  px-4 py-2 bg-white/5
+           border border-white/10 text-outline-none '
+           />
+           <button onClick={handleUpdate}
+           disabled={updateLoading}
+           className=' px-4 py-2 rounded-2xl bg-indigo-500 text-white hover:bg-indigo-600 transition-colors' ><Send size={16} /></button>
+       </div>
+     </div>
+           </>
+           
+          </motion.div>
+        )}
+       </AnimatePresence>
 
           <AnimatePresence>
             {showCode && (
@@ -175,6 +246,7 @@ const WebsiteEditor = () => {
               exit={{ opacity: 0, x: 100 }}
               className='fixed inset-y-0 right-0 w-full lg:w-[45%] bg-[#1e1e1e]  z-9990 flex flex-col'
               >
+               
                 <div className='h-14 px-4 flex justify-between items-center border-b border-white/10 bg-[#1e1e1e]'>
                   <span className='text-sm font-medium'>Code Editor</span>
                   <button onClick={() => setShowCode(false)}><X size={18} /></button>

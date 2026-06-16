@@ -1,10 +1,11 @@
-import { ArrowLeft, RocketIcon,Check,Share, Share2 } from 'lucide-react';
+import { ArrowLeft, RocketIcon,Check,Share, Copy } from 'lucide-react';
 import React from 'react'
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux';
 import { motion } from 'motion/react';
+import toast from 'react-hot-toast';
 const DashBoardPage = () => {
   const navigate = useNavigate();
   const {userData}=useSelector((state)=>state.user)
@@ -28,6 +29,32 @@ const DashBoardPage = () => {
   useEffect(() => {
     handleGetAllWebsite();
   }, [])
+
+    const handleDeploy=async(id)=>{
+         try{
+        
+          const response=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/website/deploy/${id}`,{},{withCredentials:true});
+         
+          window.open(`${response.data.url}`,'_blank'); {/*open the deployed website in a new tab */}
+          setWebsites((prevWebsites)=>prevWebsites.map((w)=>w._id===id ? {...w,deployed:true,deployedUrl:response.data.url}:w)); {/*update the deployed status in the UI */}
+            toast.success('Website deployed successfully!');
+        
+         }catch(err){
+       
+          console.error(err.response?.data?.message || err.message);
+          toast.error('Failed to deploy website.');
+
+         }
+  }
+  const handleCopyLink=async(site)=>{
+    await navigator.clipboard.writeText(site.deploymentUrl);
+    setCopiedId(site._id);
+    setTimeout(()=>{
+      setCopiedId(null);
+    },2000)
+    toast.success('Link copied to clipboard!');
+  }
+
   return (
     <div className='min-h-screen  bg-[#050505] text-white'>
       <div className=' sticky top-0 z-40 backdrop-blur-xl bg-white/5 border-b border-white/10 '>
@@ -85,17 +112,23 @@ const DashBoardPage = () => {
                         })}
                        </p>
                        {!w.deployed ? (
-                        <button className='mt-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-linear-to-r from-indigo-400 to-purple-400 text-white hover:opacity-90 transition'>
+                        <button 
+                        onClick={()=>handleDeploy(w._id)}
+                        className='mt-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-linear-to-r from-indigo-400 to-purple-400 text-white hover:opacity-90 transition'>
                           <RocketIcon size={16} className='animate-pulse' />
                           Deploy
                         </button>
                        ):(
                         <motion.button
+                        onClick={(e)=>{
+                          e.stopPropagation(),handleCopyLink(w)
+                           {/*prevent navigating to editor when clicking the copy button */}
+                        }}
                         whileTap={{ scale: 0.95 }}
 
-                        className={`mt-auto  flex items-center justify-center gap-2 px-4 rounded-xl test-sm font-medium transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white/5 text-zinc-400 hover:bg-white/10'}`}>
+                        className={`mt-auto  flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${copied ? 'bg-green-700 text-white' : 'bg-white/5 text-zinc-200 hover:bg-white/10'}`}>
 
-                          {copied ?<><Check size={16} /> Link copied</>  : <><Share2 size={16} />share link</>}
+                          {copied ?<><Check size={16} /> Link copied</>  : <><Copy size={16} />Copy link</>}
                           
                         </motion.button>
                        )}
