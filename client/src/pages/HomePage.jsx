@@ -1,8 +1,12 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
 import { WandSparkles ,Zap,Download,TabletSmartphone} from 'lucide-react'
+import {useSelector} from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import {motion} from 'motion/react'
 const HomePage = () => {
+  
+  const {userData}=useSelector((state)=>state.user)
   return (
     <>
     <Navbar />
@@ -59,7 +63,9 @@ const HomePage = () => {
         transition={{duration:0.5,delay:0.6}}
         className='flex flex-col sm:flex-row  justify-center gap-4 mt-10'
        >
-        <button className='flex items-center justify-center px-6 py-3 bg-linear-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-colors'>
+        <button 
+        
+        className='flex items-center justify-center px-6 py-3 bg-linear-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-colors'>
           Get Started
         </button>
         <button className='px-6 py-3 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors'>

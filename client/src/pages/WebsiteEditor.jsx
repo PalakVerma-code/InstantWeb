@@ -70,25 +70,32 @@ const WebsiteEditor = () => {
 
   {/*fetch the website data from the server and run useeffect when component mounts */}
   useEffect(()=>{
+    let isMounted=true;
      const handleGetWebsites=async()=>{
       try{
         const response=await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/website/getById/${id}`,{
           withCredentials:true,
         }); 
         
-        
-         setWebsites(response.data);
-         
+        if(isMounted){
+           setWebsites(response.data);
         setCode(response.data.latestCode);
-       
         setMessage(response.data.conversation);
+        }
+         
        
       }catch(err){
-        setError(err.response?.data?.message || "An error occurred while fetching website data");
+        if(isMounted)setError(err.response?.data?.message || "An error occurred while fetching website data");
+        
         console.error(err.response?.data?.message || err.message);
       }
      } 
-     handleGetWebsites();   
+
+     handleGetWebsites(); 
+     
+     return () => {
+      isMounted = false; // Cleanup step: kills further trigger streams instantly
+    };
   },[id])
   
   
@@ -112,7 +119,7 @@ const WebsiteEditor = () => {
     try{
       const response=await axios.put(`${import.meta.env.VITE_SERVER_URL}/api/website/update/${id}`,{prompt},{withCredentials:true});
       setPrompt('');{/*clear the prompt input */}
-      console.log(response.data);
+     
       setMessage((msg)=>[...msg,{role:'assistant',content:response.data.message}]);{/*add the generated code to the message array */}
       setCode(response.data.latestCode);{/*update the code state with the latest code */}
       toast.success('Website updated successfully!');
@@ -251,7 +258,9 @@ const WebsiteEditor = () => {
                   <span className='text-sm font-medium'>Code Editor</span>
                   <button onClick={() => setShowCode(false)}><X size={18} /></button>
                 </div>
-                <Editor theme='vs-dark' value={code} language='html' onChange={(value) => setCode(value)} />
+                <Editor theme='vs-dark' value={code} language='html' onChange={(value) => setCode(value)} 
+                  loading={<div className='text-white p-4'>Loading editor...</div>}
+                  />
 
               </motion.div>
             )}

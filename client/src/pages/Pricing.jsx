@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import axios from 'axios'
-import { useDispatch } from 'react-redux'
+import { useDispatch} from 'react-redux'
 import { setUserData } from '../redux/userSlice'
 import toast from 'react-hot-toast'
 
@@ -57,12 +57,16 @@ const plans = [
 const Pricing = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-     
+    
     const handlepayment=async(plan)=>{
+      
         if(plan.id==="free"){
             navigate("/dashboard");
             return;
         }
+             // ← Sirf tab load karo jab user click kare
+  await loadRazorpay();
+
         try{
            const amount=plan.id==="pro"?499:1499;
            const res=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/payments/order`,{
@@ -100,6 +104,16 @@ const Pricing = () => {
            toast.error( "Payment failed. Please try again.");
         }
     }
+
+    const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    if(window.Razorpay) return resolve(); // already loaded
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = resolve;
+    document.body.appendChild(script);
+  });
+}
     
     return (
         <div className='relative min-h-screen overflow-hidden bg-[#050505] text-white px-6 pt-16 pb-24'>

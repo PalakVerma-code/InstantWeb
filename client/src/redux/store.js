@@ -29,7 +29,8 @@ const rootReducer = combineReducers({
 // 2. Set up the persistence configuration
 const persistConfig = {
   key: 'InstantWeb',
-  storage:storage.default, // Use localStorage
+  storage: storage.default, // Use localStorage
+  version: 1,
   whitelist: ['user'], // Optional: Only persist the user slice
 };
 

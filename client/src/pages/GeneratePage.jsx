@@ -5,6 +5,7 @@ import { useNavigate, useRouteLoaderData } from 'react-router-dom';
 import { useState,useEffect } from 'react';
 import { useDispatch ,useSelector} from 'react-redux';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { setUserData } from '../redux/userSlice';
 const PHASES=[
     "Analyzing your prompt",
@@ -27,14 +28,15 @@ const GeneratePage = () => {
         try{
                 setLoading(true);
                 const res=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/website/generate`,{prompt},{withCredentials:true});
-                console.log(res.data);
+                setPrompt('');
                 setProgress(100);
-               dispatch(setUserData({...userData,credit:res.data.remainingCredits}));
+               dispatch(setUserData({...userData,credits:res.data.remainingCredits}));
                navigate(`/editor/${res.data.websiteId}`);
                 
         }catch(err){
-                console.log(err);
+               
                setError(err.message || 'Failed to generate website');
+               toast.error('Failed to generate website');
         }finally{
                 setLoading(false);
         }

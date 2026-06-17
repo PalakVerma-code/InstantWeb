@@ -159,7 +159,7 @@ export const generateWebsite = async (req, res) => {
     if (!prompt) {
       return res.status(400).json({ success: false, message: "Please Provide all the required fields" });
     }
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);// req.user is set by auth middleware
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -175,7 +175,7 @@ export const generateWebsite = async (req, res) => {
 
       parsed = await extractJson(raw);
       if (!parsed) {
-        raw = await generateResponce(finalPrompt + "\n\nRETURN ONLY RAW JSON")
+        raw = await generateResponse(finalPrompt + "\n\nRETURN ONLY RAW JSON")
         parsed = await extractJson(raw);
       }
     }
@@ -283,7 +283,7 @@ export const changeWebsite = async (req, res) => {
 
       parsed = await extractJson(raw);
       if (!parsed) {
-        raw = await generateResponce(updatePrompt + "\n\nRETURN ONLY RAW JSON")
+        raw = await generateResponse(updatePrompt + "\n\nRETURN ONLY RAW JSON")
         parsed = await extractJson(raw);
       }
     }
@@ -296,7 +296,7 @@ export const changeWebsite = async (req, res) => {
    await website.save();
     user.credits = user.credits - 5;
     await user.save();
-    return res.status(200).json({ success: true, message: parsed.message, data: parsed.code, remainingCredits: user.credits });
+    return res.status(200).json({ success: true, message: parsed.message,  remainingCredits: user.credits });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Internal Server Error" });

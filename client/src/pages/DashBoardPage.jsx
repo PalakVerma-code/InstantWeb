@@ -13,22 +13,30 @@ const DashBoardPage = () => {
   const [websites, setWebsites] = useState(null);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
-  const handleGetAllWebsite = async (id) => {
+
+  useEffect(()=>{
+    let isMounted = true; // Flag to track if the component is still mounted
+     const handleGetAllWebsite = async (id) => {
     try {
       setLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/website/getAll`, { withCredentials: true });
-      setWebsites(res.data);
+      if(isMounted){
+      setWebsites(res.data);}
      
     } catch (err) {
-      console.log(err);
+      
+      toast.error('Failed to fetch websites. Please try again later.');
       setError('Failed to fetch websites');
     } finally {
       setLoading(false);
     }
   }
-  useEffect(() => {
-    handleGetAllWebsite();
-  }, [])
+  handleGetAllWebsite();
+  return () => {
+        isMounted = false; // Page leave karte hi stop stream
+    };
+  },[])
+
 
     const handleDeploy=async(id)=>{
          try{
@@ -36,7 +44,7 @@ const DashBoardPage = () => {
           const response=await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/website/deploy/${id}`,{},{withCredentials:true});
          
           window.open(`${response.data.url}`,'_blank'); {/*open the deployed website in a new tab */}
-          setWebsites((prevWebsites)=>prevWebsites.map((w)=>w._id===id ? {...w,deployed:true,deployedUrl:response.data.url}:w)); {/*update the deployed status in the UI */}
+          setWebsites((prevWebsites)=>prevWebsites.map((w)=>w._id===id ? {...w,deployed:true,deploymentUrl:response.data.url}:w)); {/*update the deployed status in the UI */}
             toast.success('Website deployed successfully!');
         
          }catch(err){
@@ -113,7 +121,8 @@ const DashBoardPage = () => {
                        </p>
                        {!w.deployed ? (
                         <button 
-                        onClick={()=>handleDeploy(w._id)}
+
+                        onClick={()=>{ handleDeploy(w._id)}}
                         className='mt-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-linear-to-r from-indigo-400 to-purple-400 text-white hover:opacity-90 transition'>
                           <RocketIcon size={16} className='animate-pulse' />
                           Deploy
@@ -121,7 +130,8 @@ const DashBoardPage = () => {
                        ):(
                         <motion.button
                         onClick={(e)=>{
-                          e.stopPropagation(),handleCopyLink(w)
+                          e.stopPropagation();
+                         handleCopyLink(w)
                            {/*prevent navigating to editor when clicking the copy button */}
                         }}
                         whileTap={{ scale: 0.95 }}

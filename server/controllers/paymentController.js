@@ -64,10 +64,16 @@ export const verifyPayment=async(req,res)=>{
         const updatedUser=await User.findByIdAndUpdate(payment.user,{
             $inc:{credits:payment.credits},
             plan:payment.planId
-        },{new:true});
+        },{returnDocument:'after'});
 
 
-        res.json({message:"Payment verified successfully",user:updatedUser});
+        res.json({message: "Payment verified successfully",
+  user: {
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    credits: updatedUser.credits,
+    plan: updatedUser.plan}});
         
     }
     catch(err){

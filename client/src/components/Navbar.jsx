@@ -10,7 +10,6 @@ const Navbar = () => {
   const navigate=useNavigate();
   const dispatch=useDispatch();
   const {userData}=useSelector((state)=>state.user);
- 
   const [openLog,setOpenLog]=useState(false);
   const [openProfile,setOpenProfile]=useState(false);
   
@@ -72,7 +71,7 @@ const Navbar = () => {
                
               className='absolute right-0 mt-3 w-60 bg-[#0b0b0b]  rounded-xl shadow-2xl border border-white/20 overflow-hidden'
               >
-               <div className='px-4 py-3flex f border-b border-white/20'>
+               <div className='px-4 py-3 flex flex-col border-b border-white/20'>
                <p className='text-sm truncate  font-medium text-white'>{userData.name}</p>
                <p className='text-xs text-zinc-400 truncate'>{userData.email}</p>
 
