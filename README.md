@@ -58,25 +58,43 @@ TechnologyPurposeNode.js + ExpressServer & REST APIMongoDB + MongooseDatabaseJWT
 🏗️ Architecture
 
 ┌─────────────────────────────────────────────────────────┐
+<br>
 │                     CLIENT (React + Vite)                │
+<br>
 │  HomePage → Login → Dashboard → Generate → Editor       │
+<br>
 │       Redux Store (Persist) + Firebase Auth              │
+<br>
 └──────────────────────┬──────────────────────────────────┘
+<br>
                        │ Axios + HTTP-Only Cookies
+                       <br>
                        │
 ┌──────────────────────▼──────────────────────────────────┐
+<br>
 │                  SERVER (Express + Node.js)               │
+<br>
 │                                                          │
+<br>
 │  Auth Routes    → authController  → Firebase + JWT       │
+<br>
 │  Website Routes → websiteController → OpenRouter AI      │
+<br>
 │  Payment Routes → paymentController → Razorpay           │
+<br>
 │                                                          │
+<br>
 │  Middleware: authMiddleware + rateLimiter                 │
+<br>
 └──────────────────────┬──────────────────────────────────┘
+<br>
                        │
 ┌──────────────────────▼──────────────────────────────────┐
+<br>
 │                    MongoDB Atlas                          │
+<br>
 │         Users | Websites | Payments Collections          │
+<br>
 └─────────────────────────────────────────────────────────┘
 
 🔐 Security Implementation
@@ -106,3 +124,4 @@ Palak Verma
 🎓 B.Tech CSE, CSJM University Kanpur (2024–2028)
 💼 Full Stack MERN Developer
 🔗GitHub-- https://github.com/PalakVerma-code
+
